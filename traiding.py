@@ -1,17 +1,18 @@
-from enum import Enum
 from typing import Dict
 
-class OrderType(Enum):
-    BUY = "buy"
-    SELL = "sell"
-
-class Operation(Enum):
-    ADD = "add"
-    REMOVE = "remove"
-
-# TODO try to move enum classes inside the Order class
 class Order:
-    def __init__(self, order: OrderType, price: float, quantity: int, type: Operation = Operation.ADD):
+    from enum import Enum
+
+    class OrderType(Enum):
+        BUY = "buy"
+        SELL = "sell"
+
+    class Operation(Enum):
+        ADD = "add"
+        REMOVE = "remove"
+
+    def __init__(self, order: 'Order.OrderType', 
+                 price: float, quantity: int, type: 'Order.Operation' = Operation.ADD):
         self.id = None
         self.order = order
         self.type = type
@@ -19,14 +20,14 @@ class Order:
         self.quantity = quantity
 
     def mark_removed(self):    
-        self.type = Operation.REMOVE
+        self.type = Order.Operation.REMOVE
 
     def unit_price(self):
-        return self.price / self.quantity
+        return round(self.price / self.quantity, 3)
     
-    # TODO call order in order
-    def is_better(self, other: Order):
-        if self.type == OrderType.BUY:
+    def is_better(self, other):
+        
+        if self.type == Order.OrderType.BUY:
             return self.unit_price() > other.unit_price()
         else:
             return self.unit_price() < other.unit_price()
@@ -36,72 +37,60 @@ class Order:
 
 
 class Trade:
-    # Track best orders
-    best_buy: Order = None
-    best_sell: Order = None
     def __init__(self):
+        self.best_buy: 'Order' = None
+        self.best_sell: 'Order' = None
         self.orders: Dict[int, Order] = {}
         self.order_id_counter: int = 1
         self.buy_orders = []
         self.sell_orders = []
 
-# TODO try to avoid sorting in add
-    def add(self, order_type: OrderType, price: float, quantity: int):
+    def add(self, order_type: Order.OrderType, price: float, quantity: int):
         order = Order(order_type, price, quantity)
         order.id = self.order_id_counter
         self.order_id_counter += 1
-
         self.orders[order.id] = order
 
-        if order_type == OrderType.BUY:
-            self.buy_orders.append(order)
-            self.buy_orders.sort(key=lambda o: o.unit_price())
-            best_buy = self.best_price_buy()
+        if order_type == Order.OrderType.BUY:
+            for i in range(len(self.buy_orders)):
+                if self.buy_orders[i].is_better(order):
+                    self.buy_orders.insert(i, order)
+                    break
+            else:
+                self.buy_orders.append(order)
+            self.best_buy = self.buy_orders[-1]
             print(f"\nAfter adding Buy Order ID {order.id}:")
-            print("Best Buy Price Order:", best_buy)
-        
+            print("Best Buy Price Order:", self.best_buy, "Price:", self.best_buy.unit_price())
         else:
-            self.sell_orders.append(order)
-            self.sell_orders.sort(key=lambda o: -o.unit_price())
-            best_sell = self.best_price_sell()
+            for i in range(len(self.sell_orders)):
+                if self.sell_orders[i].is_better(order):
+                    self.sell_orders.insert(i, order)
+                    break
+            else:
+                self.sell_orders.append(order)
+            self.best_sell = self.sell_orders[0]
             print(f"\nAfter adding Sell Order ID {order.id}:")
-            print("Best Sell Price Order:", best_sell)
+            print("Best Sell Price Order:", self.best_sell, "Price:", self.best_sell.unit_price())
 
-    # TODO move sorting in remove
     def remove_order(self, order_id: int):
         if order_id in self.orders:
             self.orders[order_id].mark_removed()
             print(f"Order ID {order_id} marked as removed.")
         else:
             print(f"Order ID {order_id} does not exist.")
-        self.clean_orders()
 
-    def best_price_buy(self):
-        if self.buy_orders:
-            return self.buy_orders[0].unit_price(), self.buy_orders[0]
-        return None
-
-    def best_price_sell(self):
-        if self.sell_orders:
-            return self.sell_orders[0].unit_price(), self.sell_orders[0]
-        return None
-
-    def clean_orders(self):
-        self.buy_orders = [order for order in self.buy_orders if order.type != Operation.REMOVE]
-        self.sell_orders = [order for order in self.sell_orders if order.type != Operation.REMOVE]
-    
     def __repr__(self):
         return f"Trade(Orders: {self.orders})"
 
 
 def main():
     trade = Trade()
-    trade.add(OrderType.BUY, 20.00, 100)
-    trade.add(OrderType.SELL, 25.00, 200)
-    trade.add(OrderType.BUY, 23.00, 50)
-    trade.add(OrderType.BUY, 23.00, 700)
+    trade.add(Order.OrderType.BUY, 20.00, 100)
+    trade.add(Order.OrderType.SELL, 25.00, 200)
+    trade.add(Order.OrderType.BUY, 23.00, 50)
+    trade.add(Order.OrderType.BUY, 23.00, 700)
     trade.remove_order(3)
-    trade.add(OrderType.SELL, 28.00, 100)
+    trade.add(Order.OrderType.SELL, 28.00, 100)
 
     while True:
         print("\nOptions:")
@@ -126,7 +115,7 @@ def main():
                 print("Invalid input for price or quantity. Please enter valid numbers.")
                 continue
 
-            order_type = OrderType.BUY if order_type_input == "buy" else OrderType.SELL
+            order_type = Order.OrderType.BUY if order_type_input == "buy" else Order.OrderType.SELL
             trade.add(order_type, price, quantity)
         
         elif choice == "2":
