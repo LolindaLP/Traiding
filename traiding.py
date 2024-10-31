@@ -98,47 +98,48 @@ def main():
         print("2. Remove Order")
         print("3. Show Orders")
         print("4. Exit")
-        
-        choice = input("Select an option: ")
-        
-        if choice == "1":
-            # Adding an order
-            order_type_input = input("Enter Order Type (buy/sell): ").strip().lower()
-            if order_type_input not in ["buy", "sell"]:
-                print("Invalid Order Type. Please enter 'buy' or 'sell'.")
-                continue
-            
-            try:
-                price = float(input("Enter Price: "))
-                quantity = int(input("Enter Quantity: "))
-            except ValueError:
-                print("Invalid input for price or quantity. Please enter valid numbers.")
-                continue
 
-            order_type = Order.OrderType.BUY if order_type_input == "buy" else Order.OrderType.SELL
-            trade.add(order_type, price, quantity)
-        
-        elif choice == "2":
-            # Removing an order
-            try:
-                order_id = int(input("Enter Order ID to remove: "))
-                trade.remove_order(order_id)
-            except ValueError:
-                print("Invalid input. Please enter a valid Order ID.")
-        
-        elif choice == "3":
-            # Show all orders
-            print("Current Orders:")
-            for order_id, order in trade.orders.items():
-                print(order)
-        
-        elif choice == "4":
-            # Exit
-            print("Exiting the program.")
-            break
-        
-        else:
-            print("Invalid option. Please select a valid number.")
+        choice = input("Select an option: ")
+
+        match choice:
+            case "1":
+                # Adding an order
+                order_type_input = input("Enter Order Type (buy/sell): ").strip().lower()
+                if order_type_input not in ["buy", "sell"]:
+                    print("Invalid Order Type. Please enter 'buy' or 'sell'.")
+                    continue
+
+                try:
+                    price = float(input("Enter Price: "))
+                    quantity = int(input("Enter Quantity: "))
+                except ValueError:
+                    print("Invalid input for price or quantity. Please enter valid numbers.")
+                    continue
+
+                order_type = Order.OrderType.BUY if order_type_input == "buy" else Order.OrderType.SELL
+                trade.add(order_type, price, quantity)
+
+            case "2":
+                # Removing an order
+                try:
+                    order_id = int(input("Enter Order ID to remove: "))
+                    trade.remove_order(order_id)
+                except ValueError:
+                    print("Invalid input. Please enter a valid Order ID.")
+
+            case "3":
+                # Show all orders
+                print("Current Orders:")
+                for order_id, order in trade.orders.items():
+                    print(order)
+
+            case "4":
+                # Exit
+                print("Exiting the program.")
+                return  # Use return to exit from main
+
+            case _:
+                print("Invalid option. Please select a valid number.")
 
 
 if __name__ == "__main__":
