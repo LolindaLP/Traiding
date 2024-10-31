@@ -9,6 +9,7 @@ class Operation(Enum):
     ADD = "add"
     REMOVE = "remove"
 
+# TODO try to move enum classes inside the Order class
 class Order:
     def __init__(self, order: OrderType, price: float, quantity: int, type: Operation = Operation.ADD):
         self.id = None
@@ -23,17 +24,28 @@ class Order:
     def unit_price(self):
         return self.price / self.quantity
     
+    # TODO call order in order
+    def is_better(self, other: Order):
+        if self.type == OrderType.BUY:
+            return self.unit_price() > other.unit_price()
+        else:
+            return self.unit_price() < other.unit_price()
+
     def __repr__(self):
         return f"Order({self.id}, {self.order.name}, {self.type.name}, Price: {self.price}, Quantity: {self.quantity})"
 
 
 class Trade:
+    # Track best orders
+    best_buy: Order = None
+    best_sell: Order = None
     def __init__(self):
         self.orders: Dict[int, Order] = {}
         self.order_id_counter: int = 1
         self.buy_orders = []
         self.sell_orders = []
 
+# TODO try to avoid sorting in add
     def add(self, order_type: OrderType, price: float, quantity: int):
         order = Order(order_type, price, quantity)
         order.id = self.order_id_counter
@@ -55,6 +67,7 @@ class Trade:
             print(f"\nAfter adding Sell Order ID {order.id}:")
             print("Best Sell Price Order:", best_sell)
 
+    # TODO move sorting in remove
     def remove_order(self, order_id: int):
         if order_id in self.orders:
             self.orders[order_id].mark_removed()
